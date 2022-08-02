@@ -11,7 +11,14 @@ theme02 = Theme({"normal" : "bold yellow", "error" : "bold underline red", "comm
 theme03 = Theme({"normal" : "white", "error" : "white", "command" : "white", "file" : "white"})
 
 current = 0
-here = os.path.abspath(os.path.dirname(__file__)) + "\\PCESettings.txt"
+pyfile = True # NOTE: Set this to False when building EXE
+
+here = ""
+if pyfile:
+    here = os.path.abspath(os.path.dirname(__file__)) + "\\PCESettings.txt"
+else:
+    here = os.path.abspath(os.path.dirname("PCE.exe")) + "\\PCESettings.txt"
+
 try: current = int(readf(here, 'r'))
 except:
     current = 0
