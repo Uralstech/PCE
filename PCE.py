@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.0.1")
+os.system("title " + "Python Command-line Editor V1.1.0")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -69,6 +69,8 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>        Closes current file[/]
 [command]>>      show[/]
 [normal]>>        Shows contents of current file[/]
+[command]>>      showraw[/]
+[normal]>>        Shows raw contents of current file, without indexing[/]
 [command]>>      save[/]
 [normal]>>        Saves current file[/]
 [command]>>      saveas (path to file)[/]
@@ -287,6 +289,12 @@ def checkInput(cmd: str):
                     console.print("[file]>> (" + str(i) + ")" + lines[i] + "[/]")
             else:
                 console.print("[file]>> File is empty[/]")
+        elif cmd == r"showraw":
+            if len(lines) > 0:
+                for i in range(len(lines)):
+                    console.print("[file]" + lines[i] + "[/]")
+            else:
+                console.print("[file]>> File is empty[/]")
         elif cmd.startswith(r"run"):
             alt = '"' + path + '"'
 
@@ -296,7 +304,7 @@ def checkInput(cmd: str):
                 console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
         else:
             console.print("[error]>>INVALID COMMAND[/]")
-    elif path == "" and (cmd == r"close" or cmd == r"show" or cmd == r"save" or cmd.startswith(r"saveas ") or cmd.startswith(r"i ") or cmd.startswith(r"r ")) or cmd.startswith(r"rb ") or cmd.startswith(r"run"):
+    elif path == "" and (cmd == r"close" or cmd == r"showraw" or cmd == r"show" or cmd == r"save" or cmd.startswith(r"saveas ") or cmd.startswith(r"i ") or cmd.startswith(r"r ")) or cmd.startswith(r"rb ") or cmd.startswith(r"run"):
         console.print("[error]>>COMMAND REQUIRES OPENED FILE[/]")
     else:
         console.print("[error]>>INVALID COMMAND[/]")
