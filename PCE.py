@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.2.2")
+os.system("title " + "Python Command-line Editor V1.2.3")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -103,7 +103,25 @@ def checkInput(cmd: str):
             else:
                 line = input[i+1:]
                 break
-        return line, index
+        
+        formattedLine = ""
+        index2 = 0
+        for i in range(len(line)):
+            if index2 + 1 < len(line):
+                newChar = line[index2] + line[index2+1]
+                if newChar == r"$n":
+                    formattedLine += "\n"
+                    index2 += 1
+                elif newChar == r"$t":
+                    formattedLine += "\t"
+                    index2 += 1
+                else:
+                    formattedLine += line[index2]
+            else:
+                formattedLine += line[-1]
+                break
+            index2 += 1
+        return formattedLine, index
     
     if cmd == r"help":
         console.print(helpInfo)
@@ -308,7 +326,7 @@ def checkInput(cmd: str):
             if os.path.splitext(path)[1] == ".py":
                 console.print(f"[command]>>START OF {path}[/]")
                 os.system("python " + alt)
-                console.print(f"[command]>>END OF {path}[/]")
+                console.print(f"\n[command]>>END OF {path}[/]")
             else:
                 console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
         else:
