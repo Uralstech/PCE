@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.1.0")
+os.system("title " + "Python Command-line Editor V1.2.0")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -58,6 +58,8 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>      Creates new directory at path[/]
 [command]>>    deletedir (path to directory)[/]
 [normal]>>      Deletes directory at path[/]
+[command]>>    showdir (path to directory)[/]
+[normal]>>      Show all files in directory at path[/]
 [normal]>>    ONLY USE BELOW IF A FILE IS OPEN[/]
 [command]>>      i (index) (line to write)[/]
 [normal]>>        Writes given data to file at index (for appending data, set index to -1)[/]
@@ -147,49 +149,18 @@ def checkInput(cmd: str):
             return
         
         console.print("[error]>>INVALID COMMAND SYNTAX[/]")
-    elif cmd.startswith(r"open ") and path == "":
-        path = cmd[5:]
-        if not os.path.isdir(os.path.split(path)[0]):
-            path = ""
-            console.print("[error]>>INVALID PATH[/]")
-            return
-
-        if not findf(path):
-            option = console.input("[command]>>File was not found. Create? y/n [/]")
-            if option == "y":
-                writef(path, [""], 'x')
-                console.print("[normal]>>File created[/]")
-            else:
-                path = ""
-                return
-
-        loadLines()
-    elif cmd.startswith(r"delete ") and path == "":
-        path = cmd[7:]
-        if not findf(path):
-            path = ""
-            console.print("[error]>>FILE DOES NOT EXIST[/]")
-            return
-
-        option = console.input("[command]>>File will be permanently deleted. Continue? y/n [/]")
-        if option == "y":
-            os.remove(path)
-            console.print("[normal]>>File deleted[/]")
-            path = ""
-        else:
-            path = ""
-    elif cmd.startswith(r"makedir ") and path == "":
+    elif cmd.startswith(r"makedir "):
         path = cmd[8:]
         if os.path.isdir(path):
             path = ""
             console.print("[error]>>DIRECTORY ALREADY EXISTS[/]")
             return
-
+    
         os.mkdir(path)
         writef(os.path.join(path, permissionFile), ["The existance of this file tells PCE (Python Command-line Editor) this directory was created by it.", "If this did not exist, PCE won't be allowed to delete this directory."], 'x')
         console.print("[normal]>>Directory created[/]")
         path = ""
-    elif cmd.startswith(r"deletedir ") and path == "":
+    elif cmd.startswith(r"deletedir "):
         path = cmd[10:]
         if not os.path.isdir(path):
             path = ""
@@ -199,7 +170,7 @@ def checkInput(cmd: str):
             path = ""
             console.print("[error]>>PCE IS ONLY ALLOWED TO DELETE DIRECTORIES MADE BY PCE[/]")
             return
-        
+    
         filesAtDir = []
         for i in os.scandir(path):
             filesAtDir.append(i.name)
@@ -207,13 +178,68 @@ def checkInput(cmd: str):
             path = ""
             console.print(f"[error]>>FILES OTHER THAN {permissionFile} WERE FOUND IN DIRECTORY. DELETE THESE FILES BEFORE CONTINUING[/]")
             return
-
+    
         os.remove(os.path.join(path, permissionFile))
         os.rmdir(path)
         console.print("[normal]>>Directory deleted[/]")
         path = ""
-    elif (cmd.startswith(r"open ") or cmd.startswith(r"makedir ") or cmd.startswith(r"deletedir ") or cmd.startswith(r"delete ")) and path != "":
-        console.print("[error]>>CLOSE CURRENT FILE FIRST[/]")
+    elif cmd.startswith(r"showdir "):
+        path = cmd[8:]
+        if not os.path.isdir(path):
+            path = ""
+            console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
+            return
+        
+        console.print("[file][bold]>>FILE NAME                     FILE TYPE[/][/]")
+        for i in os.listdir(path):
+            spaces = " "
+            splitPath = list(os.path.splitext(i))
+            length = 29 - len(splitPath[0])
+            if splitPath[1] == "":
+                splitPath[1] = "folder?"
+            else:
+                splitPath[1] = splitPath[1][1:] + " file"
+
+            if length > 0:
+                for _ in range(length):
+                    spaces += " "
+
+            console.print(f"[file]>>{splitPath[0]}{spaces}{splitPath[1]}[/]")
+        path = ""
+    elif path == "":
+        if cmd.startswith(r"open "):
+            path = cmd[5:]
+            if not os.path.isdir(os.path.split(path)[0]):
+                path = ""
+                console.print("[error]>>INVALID PATH[/]")
+                return
+
+            if not findf(path):
+                option = console.input("[command]>>File was not found. Create? y/n [/]")
+                if option == "y":
+                    writef(path, [""], 'x')
+                    console.print("[normal]>>File created[/]")
+                else:
+                    path = ""
+                    return
+
+            loadLines()
+        elif cmd.startswith(r"delete "):
+            path = cmd[7:]
+            if not findf(path):
+                path = ""
+                console.print("[error]>>FILE DOES NOT EXIST[/]")
+                return
+
+            option = console.input("[command]>>File will be permanently deleted. Continue? y/n [/]")
+            if option == "y":
+                os.remove(path)
+                console.print("[normal]>>File deleted[/]")
+                path = ""
+            else:
+                path = ""
+        else:
+            console.print("[error]INVALID COMMAND[/]")
     elif path != "":
         if cmd.startswith(r"i "):
             formattedLine, index = formatText(cmd[2:])
@@ -299,13 +325,13 @@ def checkInput(cmd: str):
             alt = '"' + path + '"'
 
             if os.path.splitext(path)[1] == ".py":
+                console.print(f"[command]>>START OF {path}[/]")
                 os.system("python " + alt)
+                console.print(f"[command]>>END OF {path}[/]")
             else:
                 console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
         else:
             console.print("[error]>>INVALID COMMAND[/]")
-    elif path == "" and (cmd == r"close" or cmd == r"showraw" or cmd == r"show" or cmd == r"save" or cmd.startswith(r"saveas ") or cmd.startswith(r"i ") or cmd.startswith(r"r ")) or cmd.startswith(r"rb ") or cmd.startswith(r"run"):
-        console.print("[error]>>COMMAND REQUIRES OPENED FILE[/]")
     else:
         console.print("[error]>>INVALID COMMAND[/]")
 
