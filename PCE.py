@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.2.3")
+os.system("title " + "Python Command-line Editor V1.2.4")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -79,6 +79,7 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>        Saves content of current file to file at path[/]
 [command]>>      run[/]
 [normal]>>        (Only for Python files) Runs current file[/]
+[bold blue]>>  NOTE: TEXT FORMATTING IS AVAILABLE WITH $n (new-line) and $t (tab-space)
 [bold blue]>>  NOTE: COLORS AND FONTS WILL VARY ACROSS DIFFERENT COMMAND-LINE INTERPRETERS[/]""")
 
 def checkInput(cmd: str):
@@ -156,7 +157,7 @@ def checkInput(cmd: str):
             return
     
         os.mkdir(path2)
-        writef(os.path.join(path2, permissionFile), ["The existance of this file tells PCE (Python Command-line Editor) this directory was created by it.", "If this did not exist, PCE won't be allowed to delete this directory."], 'x')
+        writef(os.path.join(path2, permissionFile), ["This file grants PCE (Python Command-line Editor) permission to delete this directory when empty.", "If you do not want PCE to have this permission, please delete this file."], 'x')
         console.print("[normal]>>Directory created[/]")
     elif cmd.startswith(r"deletedir "):
         path2 = cmd[10:]
