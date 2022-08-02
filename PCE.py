@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor")
+os.system("title " + "Python Command-line Editor V1.0.1")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -67,7 +67,7 @@ r"""[normal]>>COMMANDS[/]
 [command]>>      saveas (path to file)[/]
 [normal]>>        Saves content of current file to file at path[/]
 [command]>>      run[/]
-[normal]>>        (Only works for Python files) Runs current Python file[/]
+[normal]>>        (Only for Python files) Runs current file[/]
 [bold blue]>>  NOTE: FILE WRITING SUPPORTS \n (new-line) AND \t (tab-space)[/]
 [bold blue]>>  NOTE: COLORS AND FONTS WILL VARY ACROSS DIFFERENT COMMAND-LINE INTERPRETERS[/]""")
 
@@ -281,11 +281,12 @@ def checkInput(cmd: str):
             else:
                 console.print("[file]>> File is empty[/]")
         elif cmd.startswith(r"run"):
-            if os.path.splitext(path)[1] != ".py":
-                console.print("[error]>>RUN COMMAND ONLY WORKS WITH PYTHON FILES[/]")
-                return
-            
-            os.system("python " + path)
+            alt = '"' + path + '"'
+
+            if os.path.splitext(path)[1] == ".py":
+                os.system("python " + alt)
+            else:
+                console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
         else:
             console.print("[error]>>INVALID COMMAND[/]")
     elif path == "" and (cmd == r"close" or cmd == r"show" or cmd == r"save" or cmd.startswith(r"saveas ") or cmd.startswith(r"i ") or cmd.startswith(r"r ")) or cmd.startswith(r"rb ") or cmd.startswith(r"run"):
