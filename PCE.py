@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.2.0")
+os.system("title " + "Python Command-line Editor V1.2.1")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -150,53 +150,54 @@ def checkInput(cmd: str):
         
         console.print("[error]>>INVALID COMMAND SYNTAX[/]")
     elif cmd.startswith(r"makedir "):
-        path = cmd[8:]
-        if os.path.isdir(path):
-            path = ""
+        path2 = cmd[8:]
+        if os.path.isdir(path2):
+            path2 = ""
             console.print("[error]>>DIRECTORY ALREADY EXISTS[/]")
             return
     
-        os.mkdir(path)
-        writef(os.path.join(path, permissionFile), ["The existance of this file tells PCE (Python Command-line Editor) this directory was created by it.", "If this did not exist, PCE won't be allowed to delete this directory."], 'x')
+        os.mkdir(path2)
+        writef(os.path.join(path2, permissionFile), ["The existance of this file tells PCE (Python Command-line Editor) this directory was created by it.", "If this did not exist, PCE won't be allowed to delete this directory."], 'x')
         console.print("[normal]>>Directory created[/]")
-        path = ""
     elif cmd.startswith(r"deletedir "):
-        path = cmd[10:]
-        if not os.path.isdir(path):
-            path = ""
+        path2 = cmd[10:]
+        if not os.path.isdir(path2):
+            path2 = ""
             console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
             return
-        if not findf(os.path.join(path, permissionFile)):
-            path = ""
+        if not findf(os.path.join(path2, permissionFile)):
+            path2 = ""
             console.print("[error]>>PCE IS ONLY ALLOWED TO DELETE DIRECTORIES MADE BY PCE[/]")
             return
     
         filesAtDir = []
-        for i in os.scandir(path):
+        for i in os.scandir(path2):
             filesAtDir.append(i.name)
         if len(filesAtDir) > 1 or filesAtDir[0] != permissionFile:
-            path = ""
+            path2 = ""
             console.print(f"[error]>>FILES OTHER THAN {permissionFile} WERE FOUND IN DIRECTORY. DELETE THESE FILES BEFORE CONTINUING[/]")
             return
     
-        os.remove(os.path.join(path, permissionFile))
-        os.rmdir(path)
+        os.remove(os.path.join(path2, permissionFile))
+        os.rmdir(path2)
         console.print("[normal]>>Directory deleted[/]")
-        path = ""
     elif cmd.startswith(r"showdir "):
-        path = cmd[8:]
-        if not os.path.isdir(path):
-            path = ""
+        path2 = cmd[8:]
+        if not os.path.isdir(path2):
+            path2 = ""
             console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
             return
         
         console.print("[file][bold]>>FILE NAME                     FILE TYPE[/][/]")
-        for i in os.listdir(path):
+        for i in os.listdir(path2):
             spaces = " "
             splitPath = list(os.path.splitext(i))
             length = 29 - len(splitPath[0])
-            if splitPath[1] == "":
-                splitPath[1] = "folder?"
+            if os.path.isdir(os.path.join(path2, i)):
+                splitPath[0] = i
+                splitPath[1] = "folder"
+            elif splitPath[1] == "":
+                splitPath[1] = "unknown file"
             else:
                 splitPath[1] = splitPath[1][1:] + " file"
 
@@ -205,7 +206,6 @@ def checkInput(cmd: str):
                     spaces += " "
 
             console.print(f"[file]>>{splitPath[0]}{spaces}{splitPath[1]}[/]")
-        path = ""
     elif path == "":
         if cmd.startswith(r"open "):
             path = cmd[5:]
