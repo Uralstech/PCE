@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.2.4")
+os.system("title " + "Python Command-line Editor V1.3.0")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -14,15 +14,17 @@ current = 0
 pyfile = True # NOTE: Set this to False when building EXE
 
 here = ""
+PCESettings = ""
 if pyfile:
-    here = os.path.abspath(os.path.dirname(__file__)) + "\\PCESettings.txt"
+    here = os.path.abspath(os.path.dirname(__file__))
 else:
-    here = os.path.abspath(os.path.dirname("PCE.exe")) + "\\PCESettings.txt"
+    here = os.path.abspath(os.path.dirname("PCE.exe"))
+PCESettings = here + "\\PCESettings.txt"
 
-try: current = int(readf(here, 'r'))
+try: current = int(readf(PCESettings, 'r'))
 except:
     current = 0
-    writef(here, ['0'])
+    writef(PCESettings, ['0'])
 
 console = None
 if current == 1:
@@ -37,6 +39,7 @@ else:
 console.print(r"[normal]>>Type in 'help' to get started[/]")
 
 lines = []
+copied = []
 path = ""
 
 permissionFile = "permissionfile.pcepermission"
@@ -54,15 +57,23 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>      Opens/creates file at given path[/]
 [command]>>    delete (path to file)[/]
 [normal]>>      Deletes file at given path[/]
+[command]>>    run (path to file)[/]
+[normal]>>      (Only for Python files) Runs file at path (leave empty to run current file)[/]
 [command]>>    makedir (path to directory)[/]
 [normal]>>      Creates new directory at path[/]
 [command]>>    deletedir (path to directory)[/]
 [normal]>>      Deletes directory at path[/]
 [command]>>    showdir (path to directory)[/]
 [normal]>>      Show all files in directory at path[/]
+[command]>>    template (path to directory)[/]
+[normal]>>      Make a new template file at given path (use command for more details)/]
 [normal]>>    ONLY USE BELOW IF A FILE IS OPEN[/]
 [command]>>      i (index) (line to write)[/]
 [normal]>>        Writes given data to file at index (for appending data, set index to -1)[/]
+[command]>>      c (from index) (to index)[/]
+[normal]>>        Copies all data from index one to index two[/]
+[command]>>      p (index)[/]
+[normal]>>        Pastes all copied data to index (for appending data, set index to -1)[/]
 [command]>>      r (index) (line to replace with)[/]
 [normal]>>        Removes/replaces data at index (for removing data, don't add anything after index)[/]
 [command]>>      rb (from index) (to index)[/]
@@ -77,13 +88,12 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>        Saves current file[/]
 [command]>>      saveas (path to file)[/]
 [normal]>>        Saves content of current file to file at path[/]
-[command]>>      run[/]
-[normal]>>        (Only for Python files) Runs current file[/]
 [bold blue]>>  NOTE: TEXT FORMATTING IS AVAILABLE WITH $n (new-line) and $t (tab-space)
 [bold blue]>>  NOTE: COLORS AND FONTS WILL VARY ACROSS DIFFERENT COMMAND-LINE INTERPRETERS[/]""")
 
 def checkInput(cmd: str):
     global console
+    global copied
     global lines
     global path
 
@@ -133,19 +143,19 @@ def checkInput(cmd: str):
     elif cmd.startswith(r"theme "):
         if cmd[6] == '0':
             console = Console(theme=default)
-            writef(here, ['0'])
+            writef(PCESettings, ['0'])
             return
         elif cmd[6] == '1':
             console = Console(theme=theme01)
-            writef(here, ['1'])
+            writef(PCESettings, ['1'])
             return
         elif cmd[6] == '2':
             console = Console(theme=theme02)
-            writef(here, ['2'])
+            writef(PCESettings, ['2'])
             return
         elif cmd[6] == '3':
             console = Console(theme=theme03)
-            writef(here, ['3'])
+            writef(PCESettings, ['3'])
             return
         
         console.print("[error]>>INVALID COMMAND SYNTAX[/]")
@@ -155,7 +165,7 @@ def checkInput(cmd: str):
             path2 = ""
             console.print("[error]>>DIRECTORY ALREADY EXISTS[/]")
             return
-    
+
         os.mkdir(path2)
         writef(os.path.join(path2, permissionFile), ["This file grants PCE (Python Command-line Editor) permission to delete this directory when empty.", "If you do not want PCE to have this permission, please delete this file."], 'x')
         console.print("[normal]>>Directory created[/]")
@@ -206,6 +216,27 @@ def checkInput(cmd: str):
                     spaces += " "
 
             console.print(f"[file]>>{splitPath[0]}{spaces}{splitPath[1]}[/]")
+    elif cmd.startswith(r"run"):
+        alt = ""
+        cpath = ""
+
+        if len(cmd) > 3:
+            alt = '"' + cmd[4:] + '"'
+            cpath = cmd[4:]
+        else:
+            alt = '"' + path + '"'
+            cpath = str(path)
+            
+        if not findf(cpath):
+            console.print("[error]>>FILE DOES NOT EXIST[/]")
+            return
+
+        if os.path.splitext(cpath)[1] == ".py":
+            console.print(f"[command]>>START OF {cpath}[/]")
+            os.system("python " + alt)
+            console.print(f"\n[command]>>END OF {cpath}[/]")
+        else:
+            console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
     elif path == "":
         if cmd.startswith(r"open "):
             path = cmd[5:]
@@ -238,6 +269,45 @@ def checkInput(cmd: str):
                 path = ""
             else:
                 path = ""
+        elif cmd.startswith(r"template "):
+            path2 = cmd[9:]
+            if not os.path.isdir(path2):
+                console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
+                return
+
+            templates = (
+            "[normal]>>Templates allow PCE to work with/debug/run projects from other languages"
+            + "\n>>AVAILABLE TEMPLATES:"
+            + "\n>>  C file (index: 0, requires: clang)"
+            + "\n>>  C++ file (index: 1, requires: clang)"
+            + "\n>>  C# project (index: 2, requires: .NET SDK)"
+            + "\n>>  Java file (index 3, requires: Java development kit, Java)[/]")
+
+            console.print(templates)
+            i = console.input("[command]>>Enter the index of the template: (-1 to escape) ")
+
+            temp = ""
+            if i == '0':
+                temp = "PCE_C.py"
+            elif i == '1':
+                temp = "PCE_CPP.py"
+            elif i == '2':
+                temp = "PCE_CSharp.py"
+            elif i == '3':
+                temp = "PCE_Java.py"
+            elif i == '-1':
+                return
+            else:
+                console.print("[error]>>INVALID COMMAND SYNTAX")
+                return
+            
+            tempInfo = readf(os.path.join(here, "templates/" + temp), 'rls')
+            for i in range(len(tempInfo)):
+                if tempInfo[i][-1] == '\n': tempInfo[i] = tempInfo[i][:-1]
+            tempInfo[1] = "PATH = r\"" + path2 + "\""
+
+            writef(os.path.join(path2, temp), tempInfo)
+            console.print(f"[normal]>>Template created. To use it, open {temp} in {path2}  and type in the command \'run\'")
         else:
             console.print("[error]INVALID COMMAND[/]")
     elif path != "":
@@ -287,7 +357,7 @@ def checkInput(cmd: str):
             if _to >= len(lines) or _from < 0:
                 console.print("[error]>>INDEX OUT OF RANGE[/]")
                 return
-            elif _to < _from:
+            elif _to <= _from:
                 console.print("[error]>>INDEX ONE CANNOT BE LESS THAN OR EQUAL TO INDEX TWO[/]")
                 return
             else:
@@ -296,6 +366,45 @@ def checkInput(cmd: str):
                     if i < _from or i > _to:
                         newLines.append(lines[i])
                 lines = newLines
+        elif cmd.startswith(r"c "):
+            _to, _from = formatText(cmd[2:])
+
+            try:
+                _from = int(_from)
+                _to = int(_to)
+            except:
+                console.print("[error]>>INVALID COMMAND SYNTAX[/]")
+                return
+
+            if _to >= len(lines) or _from < 0:
+                console.print("[error]>>INDEX OUT OF RANGE[/]")
+                return
+            if _to < _from:
+                console.print("[error]>>INDEX ONE CANNOT BE LESS THAN INDEX TWO[/]")
+                return
+
+            newLines = []
+            for i in range(len(lines)):
+                if i >= _from and i <= _to:
+                    newLines.append(lines[i])
+            copied = newLines
+        elif cmd.startswith(r"p "):
+            _from, _to = formatText(cmd[2:])
+
+            try:
+                _to = int(_to)
+            except:
+                console.print("[error]>>INVALID COMMAND SYNTAX[/]")
+                return
+
+            if copied == []:
+                console.print("[error]>>NOTHING HAS BEEN COPIED FOR PASTING[/]")
+                return
+
+            if _to >= len(lines) or _to < 0:
+                for i in copied: lines.append(i)
+            else:
+                for i in copied: lines.insert(_to, i); _to += 1
         elif cmd == r"close":
             writef(path, lines, 'w')
             lines = None
@@ -312,7 +421,10 @@ def checkInput(cmd: str):
         elif cmd == r"show":
             if len(lines) > 0:
                 for i in range(len(lines)):
-                    console.print("[file]>> (" + str(i) + ")" + lines[i] + "[/]")
+                    num = str(i)
+                    if 4 - len(num) <= 3: num += ' ' * (4 - len(num))
+
+                    console.print("[file]" + num + ">>" + lines[i])
             else:
                 console.print("[file]>> File is empty[/]")
         elif cmd == r"showraw":
@@ -321,15 +433,6 @@ def checkInput(cmd: str):
                     console.print("[file]" + lines[i] + "[/]")
             else:
                 console.print("[file]>> File is empty[/]")
-        elif cmd.startswith(r"run"):
-            alt = '"' + path + '"'
-
-            if os.path.splitext(path)[1] == ".py":
-                console.print(f"[command]>>START OF {path}[/]")
-                os.system("python " + alt)
-                console.print(f"\n[command]>>END OF {path}[/]")
-            else:
-                console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
         else:
             console.print("[error]>>INVALID COMMAND[/]")
     else:
