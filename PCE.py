@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.3.1")
+os.system("title " + "Python Command-line Editor V1.3.2")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -116,14 +116,14 @@ def checkInput(cmd: str):
                 if lines[i][-1] == '\n':
                     lines[i] = lines[i][:-1]
     
-    def formatText(input):
+    def formatText(iinput):
         line = ""
         index = ""
-        for i in range(len(input)):
-            if input[i] != " ":
-                index += input[i]
+        for i in range(len(iinput)):
+            if iinput[i] != " ":
+                index += iinput[i]
             else:
-                line = input[i+1:]
+                line = iinput[i+1:]
                 break
         
         formattedLine = ""
@@ -465,8 +465,15 @@ def checkInput(cmd: str):
                 for i in range(len(lines)):
                     num = str(i)
                     if 4 - len(num) <= 3: num += ' ' * (4 - len(num))
+                    temp = ""
+                    for j in range(len(lines[i])):
+                        test = lines[i][j] == '[' and ']' in lines[i][j:] and '"' not in lines[i][j:lines[i].index(']')]
+                        if test: temp += r"\["
+                        elif lines[i][j] == "\t": temp += "    "
+                        else: temp += lines[i][j]
 
-                    console.print("[file]" + num + ">>" + lines[i])
+                    console.print("[file]" + num + ">>", end="")
+                    console.print(temp)
             else:
                 console.print("[file]>> File is empty[/]")
         elif cmd == r"showraw":
