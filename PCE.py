@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.3.0")
+os.system("title " + "Python Command-line Editor V1.3.1")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -46,6 +46,12 @@ permissionFile = "permissionfile.pcepermission"
 helpInfo =(
 r"""[normal]>>COMMANDS[/]
 [normal]>>  GENERAL[/]
+[command]>>    :(Command-line code)[/]
+[normal]>>      Runs given Command-line code[/]
+[command]>>    ::(Python code)[/]
+[normal]>>      Runs given Python code[/]
+[command]>>    cd (path to directory)[/]
+[normal]>>      Changes current working directory (cwd) to given directory (leave empty to view cwd)[/]
 [command]>>    theme (index)[/]
 [normal]>>      Changes console theme according to index (available: 0, 1, 2, 3 | default: 0)[/]
 [command]>>    clear[/]
@@ -53,19 +59,19 @@ r"""[normal]>>COMMANDS[/]
 [command]>>    quit[/]
 [normal]>>      Quits program[/]
 [normal]>>  FILE[/]
-[command]>>    open (path to file)[/]
+[command]>>    open (mode) (path to file)[/]
 [normal]>>      Opens/creates file at given path[/]
-[command]>>    delete (path to file)[/]
+[command]>>    delete (mode) (path to file)[/]
 [normal]>>      Deletes file at given path[/]
-[command]>>    run (path to file)[/]
+[command]>>    run (mode) (path to file)[/]
 [normal]>>      (Only for Python files) Runs file at path (leave empty to run current file)[/]
-[command]>>    makedir (path to directory)[/]
+[command]>>    makedir (mode) (path to directory)[/]
 [normal]>>      Creates new directory at path[/]
-[command]>>    deletedir (path to directory)[/]
+[command]>>    deletedir (mode) (path to directory)[/]
 [normal]>>      Deletes directory at path[/]
-[command]>>    showdir (path to directory)[/]
+[command]>>    showdir (mode) (path to directory)[/]
 [normal]>>      Show all files in directory at path[/]
-[command]>>    template (path to directory)[/]
+[command]>>    template (mode) (path to directory)[/]
 [normal]>>      Make a new template file at given path (use command for more details)/]
 [normal]>>    ONLY USE BELOW IF A FILE IS OPEN[/]
 [command]>>      i (index) (line to write)[/]
@@ -86,8 +92,13 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>        Shows raw contents of current file, without indexing[/]
 [command]>>      save[/]
 [normal]>>        Saves current file[/]
-[command]>>      saveas (path to file)[/]
+[command]>>      saveas (mode) (path to file)[/]
 [normal]>>        Saves content of current file to file at path[/]
+[normal]>>  MODES:[/]
+[command]>>    c[/]
+[normal]>>      Points to any file/directory in CWD[/]
+[command]>>    f[/]
+[normal]>>      Points to any file/directory in SYSTEM (needs full path)[/]
 [bold blue]>>  NOTE: TEXT FORMATTING IS AVAILABLE WITH $n (new-line) and $t (tab-space)
 [bold blue]>>  NOTE: COLORS AND FONTS WILL VARY ACROSS DIFFERENT COMMAND-LINE INTERPRETERS[/]""")
 
@@ -133,8 +144,30 @@ def checkInput(cmd: str):
                 break
             index2 += 1
         return formattedLine, index
+
+    def checkMode(input):
+        if input[0] == 'c': return os.path.join(os.getcwd(), input[2:])
+        elif input[0] == 'f': return input[2:]
+        else: console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
     
-    if cmd == r"help":
+    if cmd.startswith(r"::"):
+        console.print("[command]>>START OF [CUSTOM PYTHON CODE][/]")
+        eval(cmd[2:])
+        console.print("[command]>>END OF [CUSTOM PYTHON CODE][/]")
+    elif cmd.startswith(r":"):
+        console.print("[command]>>START OF [COMMAND][/]")
+        os.system(cmd[1:])
+        console.print("[command]>>END OF [COMMAND][/]")
+    elif cmd.startswith(r"cd"):
+        if len(cmd) == 2:
+            console.print("[normal]>>" + os.getcwd() + "[/]")
+            return
+        if not os.path.isdir(cmd[3:]):
+            console.print("[error]>>INVALID PATH")
+            return
+        
+        os.chdir(cmd[3:])
+    elif cmd == r"help":
         console.print(helpInfo)
     elif cmd == r"clear":
         os.system('cls' if os.name in ('nt', 'dos') else 'clear')
@@ -159,24 +192,25 @@ def checkInput(cmd: str):
             return
         
         console.print("[error]>>INVALID COMMAND SYNTAX[/]")
-    elif cmd.startswith(r"makedir "):
-        path2 = cmd[8:]
+    elif cmd.startswith(r"makedir"):
+        path2 = checkMode(cmd[8:])
+        if path2 == -1: return
+
         if os.path.isdir(path2):
-            path2 = ""
             console.print("[error]>>DIRECTORY ALREADY EXISTS[/]")
             return
 
         os.mkdir(path2)
         writef(os.path.join(path2, permissionFile), ["This file grants PCE (Python Command-line Editor) permission to delete this directory when empty.", "If you do not want PCE to have this permission, please delete this file."], 'x')
         console.print("[normal]>>Directory created[/]")
-    elif cmd.startswith(r"deletedir "):
-        path2 = cmd[10:]
+    elif cmd.startswith(r"deletedir"):
+        path2 = checkMode(cmd[10:])
+        if path2 == -1: return
+            
         if not os.path.isdir(path2):
-            path2 = ""
             console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
             return
         if not findf(os.path.join(path2, permissionFile)):
-            path2 = ""
             console.print("[error]>>PCE IS ONLY ALLOWED TO DELETE DIRECTORIES MADE BY PCE[/]")
             return
     
@@ -184,15 +218,16 @@ def checkInput(cmd: str):
         for i in os.scandir(path2):
             filesAtDir.append(i.name)
         if len(filesAtDir) > 1 or filesAtDir[0] != permissionFile:
-            path2 = ""
             console.print(f"[error]>>FILES OTHER THAN {permissionFile} WERE FOUND IN DIRECTORY. DELETE THESE FILES BEFORE CONTINUING[/]")
             return
     
         os.remove(os.path.join(path2, permissionFile))
         os.rmdir(path2)
         console.print("[normal]>>Directory deleted[/]")
-    elif cmd.startswith(r"showdir "):
-        path2 = cmd[8:]
+    elif cmd.startswith(r"showdir"):
+        path2 = checkMode(cmd[8:])
+        if path2 == -1: return
+
         if not os.path.isdir(path2):
             path2 = ""
             console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
@@ -221,8 +256,9 @@ def checkInput(cmd: str):
         cpath = ""
 
         if len(cmd) > 3:
-            alt = '"' + cmd[4:] + '"'
-            cpath = cmd[4:]
+            cpath = checkMode(cmd[4:])
+            if cpath == -1: return
+            alt = '"' + cpath + '"'
         else:
             alt = '"' + path + '"'
             cpath = str(path)
@@ -238,8 +274,10 @@ def checkInput(cmd: str):
         else:
             console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
     elif path == "":
-        if cmd.startswith(r"open "):
-            path = cmd[5:]
+        if cmd.startswith(r"open"):
+            path = checkMode(cmd[5:])
+            if path == -1: path = ""; return
+
             if not os.path.isdir(os.path.split(path)[0]):
                 path = ""
                 console.print("[error]>>INVALID PATH[/]")
@@ -255,22 +293,22 @@ def checkInput(cmd: str):
                     return
 
             loadLines()
-        elif cmd.startswith(r"delete "):
-            path = cmd[7:]
-            if not findf(path):
-                path = ""
+        elif cmd.startswith(r"delete"):
+            path2 = checkMode(cmd[7:])
+            if path2 == -1: return
+            
+            if not findf(path2):
                 console.print("[error]>>FILE DOES NOT EXIST[/]")
                 return
 
             option = console.input("[command]>>File will be permanently deleted. Continue? y/n [/]")
             if option == "y":
-                os.remove(path)
+                os.remove(path2)
                 console.print("[normal]>>File deleted[/]")
-                path = ""
-            else:
-                path = ""
-        elif cmd.startswith(r"template "):
-            path2 = cmd[9:]
+        elif cmd.startswith(r"template"):
+            path2 = checkMode(cmd[9:])
+            if path2 == -1: return
+
             if not os.path.isdir(path2):
                 console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
                 return
@@ -304,6 +342,7 @@ def checkInput(cmd: str):
             tempInfo = readf(os.path.join(here, "templates/" + temp), 'rls')
             for i in range(len(tempInfo)):
                 if tempInfo[i][-1] == '\n': tempInfo[i] = tempInfo[i][:-1]
+            if path2[-1] == "\\": path2 = path2[:-1]
             tempInfo[1] = "PATH = r\"" + path2 + "\""
 
             writef(os.path.join(path2, temp), tempInfo)
@@ -415,7 +454,10 @@ def checkInput(cmd: str):
             loadLines()
             console.print("[normal]>>File saved[/]")
         elif cmd.startswith(r"saveas "):
-            writef(cmd[7:], lines)
+            path2 = checkMode(cmd[7:])
+            if path2 == -1: return
+
+            writef(path2, lines)
             loadLines()
             console.print("[normal]>>File saved[/]")
         elif cmd == r"show":
