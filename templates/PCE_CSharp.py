@@ -23,7 +23,5 @@ if i == '0':
 elif i == '1':
     os.system("dotnet run \"" + PATH + "\"")
 elif i == '2':
-    name = os.path.abspath(os.path.dirname(PATH))
-    name = name.split('\\')[-1]
-    
+    name = PATH.split('\\')[-1]
     os.system("\"" + os.path.join(PATH, "bin/debug/net6.0/" + name + ".exe\""))

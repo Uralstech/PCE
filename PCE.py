@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.3.2")
+os.system("title " + "Python Command-line Editor V1.3.3")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -50,7 +50,7 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>      Runs given Command-line code[/]
 [command]>>    ::(Python code)[/]
 [normal]>>      Runs given Python code[/]
-[command]>>    cd (path to directory)[/]
+[command]>>    cd (mode) (path to directory)[/]
 [normal]>>      Changes current working directory (cwd) to given directory (leave empty to view cwd)[/]
 [command]>>    theme (index)[/]
 [normal]>>      Changes console theme according to index (available: 0, 1, 2, 3 | default: 0)[/]
@@ -97,6 +97,8 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>  MODES:[/]
 [command]>>    c[/]
 [normal]>>      Points to any file/directory in CWD[/]
+[command]>>    r[/]
+[normal]>>      Points to any file/directory in the directory that contains the CWD[/]
 [command]>>    f[/]
 [normal]>>      Points to any file/directory in SYSTEM (needs full path)[/]
 [bold blue]>>  NOTE: TEXT FORMATTING IS AVAILABLE WITH $n (new-line) and $t (tab-space)
@@ -146,10 +148,28 @@ def checkInput(cmd: str):
         return formattedLine, index
 
     def checkMode(input):
-        if input[0] == 'c': return os.path.join(os.getcwd(), input[2:])
+        if len(input) == 0:console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
+        elif input[0] == 'c': return os.path.join(os.getcwd(), input[2:])
+        elif input[0] == 'r':
+            temp = ""
+            cwd = os.getcwd().split('\\')
+            for i in range(len(cwd) - 1): temp += cwd[i] + '\\'
+            return os.path.join(temp, input[2:])
         elif input[0] == 'f': return input[2:]
         else: console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
     
+    def dirSize(dirpath):
+        total = 0
+        try:
+            with os.scandir(dirpath) as scan:
+                for entry in scan:
+                        if entry.is_file():
+                            total += entry.stat().st_size
+                        elif entry.is_dir():
+                            total += dirSize(entry.path)
+        except: return "e"
+        return total
+
     if cmd.startswith(r"::"):
         console.print("[command]>>START OF [CUSTOM PYTHON CODE][/]")
         eval(cmd[2:])
@@ -159,14 +179,17 @@ def checkInput(cmd: str):
         os.system(cmd[1:])
         console.print("[command]>>END OF [COMMAND][/]")
     elif cmd.startswith(r"cd"):
-        if len(cmd) == 2:
+        if cmd == r"cd":
             console.print("[normal]>>" + os.getcwd() + "[/]")
             return
-        if not os.path.isdir(cmd[3:]):
+            
+        path2 = checkMode(cmd[3:])
+        if path2 == -1: return
+        if not os.path.isdir(path2):
             console.print("[error]>>INVALID PATH")
             return
         
-        os.chdir(cmd[3:])
+        os.chdir(path2)
     elif cmd == r"help":
         console.print(helpInfo)
     elif cmd == r"clear":
@@ -233,12 +256,14 @@ def checkInput(cmd: str):
             console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
             return
         
-        console.print("[file][bold]>>FILE NAME                     FILE TYPE[/][/]")
+        console.print("[file][bold]>>WARNING: THIS CODE MAY BE ERRONEOUS BECAUSE OF INACCESSIBLE FILES[/]")
+        console.print("[file][bold]>>NAME\t\t\t\tTYPE\t\t\t\tSIZE[/][/]")
         for i in os.listdir(path2):
             spaces = " "
+            mainPath = os.path.join(path2, i)
             splitPath = list(os.path.splitext(i))
             length = 29 - len(splitPath[0])
-            if os.path.isdir(os.path.join(path2, i)):
+            if os.path.isdir(mainPath):
                 splitPath[0] = i
                 splitPath[1] = "folder"
             elif splitPath[1] == "":
@@ -249,8 +274,26 @@ def checkInput(cmd: str):
             if length > 0:
                 for _ in range(length):
                     spaces += " "
+            
+            spaces2 = ""
+            length2 = 32 - len(splitPath[1])
+            if length2 > 0:
+                for _ in range(length2):
+                    spaces2 += " "
+            
+            size = ""
+            try:
+                if findf(mainPath): size = os.path.getsize(mainPath)
+                elif os.path.isdir(mainPath): size = dirSize(mainPath)
+            except: pass
 
-            console.print(f"[file]>>{splitPath[0]}{spaces}{splitPath[1]}[/]")
+            if size == "" or size == "e": size = "unknown"
+            elif size >= 1024**3: size = (f"{size/(1024**3):.2f}") + " Gb"
+            elif size >= 1024**2: size = (f"{size/(1024**2):.2f}") + " Mb"
+            elif size >= 1024: size = (f"{size/1024:.2f}") + " Kb"
+            else: size = (f"{size:.2f}") + " Bytes"
+
+            console.print(f"[file]>>{splitPath[0]}{spaces}{splitPath[1]}{spaces2}{size}[/]")
     elif cmd.startswith(r"run"):
         alt = ""
         cpath = ""
