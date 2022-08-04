@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.theme import Theme
 import os
 
-os.system("title " + "Python Command-line Editor V1.3.3")
+os.system("title " + "Python Command-line Editor V1.3.4")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -515,16 +515,20 @@ def checkInput(cmd: str):
                         elif lines[i][j] == "\t": temp += "    "
                         else: temp += lines[i][j]
 
-                    console.print("[file]" + num + ">>", end="")
-                    console.print(temp)
+                    console.print("[file]" + num + ">>" + temp + "[/]")
             else:
-                console.print("[file]>> File is empty[/]")
+                console.print("[file]>>File is empty[/]")
         elif cmd == r"showraw":
             if len(lines) > 0:
                 for i in range(len(lines)):
-                    console.print("[file]" + lines[i] + "[/]")
+                    temp = ""
+                    for j in range(len(lines[i])):
+                        test = lines[i][j] == '[' and ']' in lines[i][j:] and '"' not in lines[i][j:lines[i].index(']')]
+                        if test: temp += r"\["
+                        else: temp += lines[i][j]
+                    console.print("[file]" + temp + "[/]")
             else:
-                console.print("[file]>> File is empty[/]")
+                console.print("[file]>>File is empty[/]")
         else:
             console.print("[error]>>INVALID COMMAND[/]")
     else:
