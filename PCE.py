@@ -4,7 +4,7 @@ from rich.theme import Theme
 from rich.markup import escape
 import os
 
-os.system("title Python Command-line Editor V1.4.0")
+os.system("title Python Command-line Editor V1.4.1")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -12,30 +12,20 @@ theme02 = Theme({"normal" : "bold yellow", "error" : "bold underline red", "comm
 theme03 = Theme({"normal" : "white", "error" : "white", "command" : "white", "file" : "white"})
 
 current = 0
-pyfile = True # NOTE: Set this to False when building EXE
 
 here = ""
 PCESettings = ""
-if pyfile:
-    here = os.path.abspath(os.path.dirname(__file__))
-else:
-    here = os.path.abspath(os.path.dirname("PCE.exe"))
+here = os.getcwd()
 PCESettings = here + "\\PCESettings.txt"
 
 try: current = int(readf(PCESettings, 'r'))
-except:
-    current = 0
-    writef(PCESettings, ['0'])
+except: current = 0; writef(PCESettings, ['0'])
 
 console = None
-if current == 1:
-    console = Console(theme=theme01)
-elif current == 2:
-    console = Console(theme=theme02)
-elif current == 3:
-    console = Console(theme=theme03)
-else:
-    console = Console(theme=default)
+if current == 1: console = Console(theme=theme01)
+elif current == 2: console = Console(theme=theme02)
+elif current == 3: console = Console(theme=theme03)
+else: console = Console(theme=default)
 
 console.print(r"[normal]>>Type in 'help' to get started[/]")
 
@@ -143,12 +133,15 @@ def checkInput(cmd: str):
         try:
             with os.scandir(dirpath) as scan:
                 for entry in scan:
-                    if entry.is_file():
-                        total += entry.stat().st_size
-                    elif entry.is_dir():
-                        total += dirSize(entry.path)
+                    if entry.is_file(): total += entry.stat().st_size
+                    elif entry.is_dir(): total += dirSize(entry.path)
         except: return "e"
         return total
+
+    def checkPath(currentPath, dir=False):
+        if not dir and not findf(currentPath): console.print("[error]>>INVALID PATH: FILE DOES NOT EXIST[/]"); return 0
+        elif dir and not os.path.isdir(currentPath): console.print("[error]>>INVALID PATH: DIRECTORY DOES NOT EXIST[/]"); return 0
+        return 1
 
     if cmd.startswith(r"::"):
         console.print("[command]>>START OF [CUSTOM PYTHON CODE][/]")
@@ -165,9 +158,7 @@ def checkInput(cmd: str):
             
         path2 = checkMode(cmd[3:])
         if path2 == -1: return
-        if not os.path.isdir(path2):
-            console.print("[error]>>INVALID PATH")
-            return
+        if checkPath(path2, True) == 0: return
         
         os.chdir(path2)
     elif cmd == r"help":
@@ -180,28 +171,21 @@ def checkInput(cmd: str):
         if cmd[6] == '0':
             console = Console(theme=default)
             writef(PCESettings, ['0'])
-            return
         elif cmd[6] == '1':
             console = Console(theme=theme01)
             writef(PCESettings, ['1'])
-            return
         elif cmd[6] == '2':
             console = Console(theme=theme02)
             writef(PCESettings, ['2'])
-            return
         elif cmd[6] == '3':
             console = Console(theme=theme03)
             writef(PCESettings, ['3'])
-            return
-        
-        console.print("[error]>>INVALID COMMAND SYNTAX[/]")
+        else: console.print("[error]>>INVALID COMMAND SYNTAX[/]")
     elif cmd.startswith(r"makedir"):
         path2 = checkMode(cmd[8:])
         if path2 == -1: return
 
-        if os.path.isdir(path2):
-            console.print("[error]>>DIRECTORY ALREADY EXISTS[/]")
-            return
+        if os.path.isdir(path2): console.print("[error]>>DIRECTORY ALREADY EXISTS[/]"); return
 
         os.mkdir(path2)
         writef(os.path.join(path2, permissionFile), ("This file grants PCE (Python Command-line Editor) permission to delete this directory when empty.", "If you do not want PCE to have this permission, please delete this file."), 'x')
@@ -210,9 +194,7 @@ def checkInput(cmd: str):
         path2 = checkMode(cmd[10:])
         if path2 == -1: return
             
-        if not os.path.isdir(path2):
-            console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
-            return
+        if checkPath(path2, True) == 0: return
         if not findf(os.path.join(path2, permissionFile)):
             console.print("[error]>>PCE IS ONLY ALLOWED TO DELETE DIRECTORIES MADE BY PCE[/]")
             return
@@ -231,10 +213,7 @@ def checkInput(cmd: str):
         path2 = checkMode(cmd[8:])
         if path2 == -1: return
 
-        if not os.path.isdir(path2):
-            path2 = ""
-            console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
-            return
+        if checkPath(path2, True) == 0: return
         
         console.print("[file][bold]>>WARNING: THIS CODE MAY BE ERRONEOUS BECAUSE OF INACCESSIBLE FILES[/]")
         console.print("[file][bold]>>NAME\t\t\t\tTYPE\t\t\t\tSIZE[/][/]")
@@ -244,13 +223,9 @@ def checkInput(cmd: str):
                 mainPath = os.path.join(path2, i.name)
                 splitPath = list(os.path.splitext(i.name))
                 length = 29 - len(splitPath[0])
-                if os.path.isdir(mainPath):
-                    splitPath[0] = i.name
-                    splitPath[1] = "folder"
-                elif splitPath[1] == "":
-                    splitPath[1] = "unknown file"
-                else:
-                    splitPath[1] = splitPath[1][1:] + " file"
+                if os.path.isdir(mainPath): splitPath[0] = i.name; splitPath[1] = "folder"
+                elif splitPath[1] == "": splitPath[1] = "unknown file"
+                else: splitPath[1] = splitPath[1][1:] + " file"
 
                 if length > 0: spaces += " " * length
 
@@ -283,43 +258,33 @@ def checkInput(cmd: str):
             alt = '"' + path + '"'
             cpath = str(path)
             
-        if not findf(cpath):
-            console.print("[error]>>FILE DOES NOT EXIST[/]")
-            return
+        if checkPath(cpath) == 0: return
 
         if os.path.splitext(cpath)[1] == ".py":
             console.print(f"[command]>>START OF {cpath}[/]")
             os.system("python " + alt)
             console.print(f"\n[command]>>END OF {cpath}[/]")
-        else:
-            console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
+        else: console.print("[error]>>RUN COMMAND ONLY SUPPORTS PYTHON FILES[/]")
     elif path == "":
         if cmd.startswith(r"open"):
             path = checkMode(cmd[5:])
             if path == -1: path = ""; return
 
-            if not os.path.isdir(os.path.split(path)[0]):
-                path = ""
-                console.print("[error]>>INVALID PATH[/]")
-                return
+            if checkPath(os.path.split(path)[0], True) == 0: path = ""; return
 
             if not findf(path):
                 option = console.input("[command]>>File was not found. Create? y/n [/]")
                 if option == "y":
                     writef(path, (""), 'x')
                     console.print("[normal]>>File created[/]")
-                else:
-                    path = ""
-                    return
+                else: path = ""; return
 
             loadLines()
         elif cmd.startswith(r"delete"):
             path2 = checkMode(cmd[7:])
             if path2 == -1: return
             
-            if not findf(path2):
-                console.print("[error]>>FILE DOES NOT EXIST[/]")
-                return
+            if checkPath(path2) == 0: return
 
             option = console.input("[command]>>File will be permanently deleted. Continue? y/n [/]")
             if option == "y":
@@ -329,9 +294,7 @@ def checkInput(cmd: str):
             path2 = checkMode(cmd[9:])
             if path2 == -1: return
 
-            if not os.path.isdir(path2):
-                console.print("[error]>>DIRECTORY DOES NOT EXIST[/]")
-                return
+            if checkPath(path2, True) == 0: return
 
             templates = (
             "[normal]>>Templates allow PCE to work with/debug/run projects from other languages"
@@ -345,55 +308,39 @@ def checkInput(cmd: str):
             i = console.input("[command]>>Enter the index of the template: (-1 to escape) ")
 
             temp = ""
-            if i == '0':
-                temp = "PCE_C.py"
-            elif i == '1':
-                temp = "PCE_CPP.py"
-            elif i == '2':
-                temp = "PCE_CSharp.py"
-            elif i == '3':
-                temp = "PCE_Java.py"
-            elif i == '-1':
-                return
-            else:
-                console.print("[error]>>INVALID COMMAND SYNTAX")
-                return
+            if i == '0': temp = "PCE_C.py"
+            elif i == '1': temp = "PCE_CPP.py"
+            elif i == '2': temp = "PCE_CSharp.py"
+            elif i == '3': temp = "PCE_Java.py"
+            elif i == '-1': return
+            else: console.print("[error]>>INVALID COMMAND SYNTAX"); return
             
             def func(n):
                 if n[-1] == '\n': n = n[:-1]
                 return n
 
-            tempInfo = tuple(readf(os.path.join(here, str.join("", ("templates/", temp)), 'rls')))
+            tempInfo = tuple(readf(os.path.join(here, str.join("", ("templates/", temp))), 'rls'))
             tempInfo = list(map(func, tempInfo))
             if path2[-1] == "\\": path2 = path2[:-1]
             tempInfo[1] = "PATH = r\"" + path2 + "\""
 
             writef(os.path.join(path2, temp), tempInfo)
             console.print(f"[normal]>>Template created. To use it, open {temp} in {path2}  and type in the command \'run\'")
-        else:
-            console.print("[error]INVALID COMMAND[/]")
+        else: console.print("[error]INVALID COMMAND[/]")
     elif path != "":
         if cmd.startswith(r"i "):
             formattedLine, index = formatText(cmd[2:])
 
-            try:
-                index = int(index)
-            except:
-                console.print("[error]>>INVALID COMMAND SYNTAX[/]")
-                return
+            try: index = int(index)
+            except: console.print("[error]>>INVALID COMMAND SYNTAX[/]"); return
 
-            if index >= len(lines) or index < 0:
-                lines.append(formattedLine)
-            else:
-                lines.insert(index, formattedLine)
+            if index >= len(lines) or index < 0: lines.append(formattedLine)
+            else: lines.insert(index, formattedLine)
         elif cmd.startswith(r"r "):
             formattedLine, index = formatText(cmd[2:])
 
-            try:
-                index = int(index)
-            except:
-                console.print("[error]>>INVALID COMMAND SYNTAX[/]")
-                return
+            try: index = int(index)
+            except: console.print("[error]>>INVALID COMMAND SYNTAX[/]"); return
 
             if index >= len(lines) or index < 0:
                 console.print("[error]>>INDEX OUT OF RANGE[/]")
@@ -417,8 +364,7 @@ def checkInput(cmd: str):
             elif _to <= _from:
                 console.print("[error]>>INDEX ONE CANNOT BE LESS THAN OR EQUAL TO INDEX TWO[/]")
                 return
-            else:
-                del lines[_from:_to+1]
+            else: del lines[_from:_to+1]
         elif cmd.startswith(r"c "):
             _to, _from = formatText(cmd[2:])
 
