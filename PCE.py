@@ -4,7 +4,7 @@ from rich.theme import Theme
 from rich.markup import escape
 import os
 
-os.system("title Python Command-line Editor V1.4.1")
+os.system("title Python Command-line Editor V1.4.2")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -425,7 +425,7 @@ def checkInput(cmd: str):
                     console.print(f"[file]{escape(num)}>>{escape(temp)}[/]")
             else: console.print("[file]>>File is empty[/]")
         elif cmd == r"showraw":
-            if len(lines) > 0: console.print(str.join("", ("[file]", '\n'.join(lines))))
+            if len(lines) > 0: console.print(str.join("", ("[file]", escape('\n'.join(lines)))))
             else: console.print("[file]>>File is empty[/]")
         else: console.print("[error]>>INVALID COMMAND[/]")
     else: console.print("[error]>>INVALID COMMAND[/]")
