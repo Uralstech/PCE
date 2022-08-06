@@ -1,5 +1,5 @@
 import os
-PATH = 'Enter file path here'
+PATH = r''
 
 cSharpTemplate = (
 """using System;
@@ -13,8 +13,8 @@ namespace Application{
 }""")
 
 os.chdir(PATH)
-print("Enter run mode\n- Create csproj (0)\n- Compile csproj (1)\n- Run compiled exe (2)")
-i = input(":")
+print("AVAILABLE TASKS:\n- Create C# Project (0)\n- Compile C# Project (1)\n- Run compiled executable (2)")
+i = input("TASK TO EXECUTE: ")
 
 if i == '0':
     os.system("dotnet new console")

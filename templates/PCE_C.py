@@ -1,5 +1,5 @@
 import os
-PATH = r'Enter file path here'
+PATH = r''
 
 cTemplate = (
 """#include <stdio.h>
@@ -10,15 +10,15 @@ int main(){
 }""")
 
 os.chdir(PATH)
-print("Enter run mode\n- Create c file (0)\n- Compile c file (1)\n- Run compiled exe (2)")
-i = input(":")
+print("AVAILABLE TASKS:\n- Create C file (0)\n- Compile C file (1)\n- Run compiled executable (2)")
+i = input("TASK TO EXECUTE: ")
 
 llvm = r"C:\Program Files\LLVM\bin\clang.exe"
 if i == '2':
-    name = input("\nEnter name of .exe file: ")
+    name = input("\nName of .exe file: ")
     path = os.path.join(PATH, name + ".exe")
 elif i == '0' or i == '1':
-    name = input("\nEnter name of .c file: ")
+    name = input("\nName of .c file: ")
     path = os.path.join(PATH, name + ".c")
 
 if i == '0':

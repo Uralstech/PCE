@@ -1,5 +1,5 @@
 import os
-PATH = r'Enter file path here'
+PATH = r''
 
 javaTemplate = (
 """class HelloWorld {
@@ -9,8 +9,8 @@ javaTemplate = (
 }""")
 
 os.chdir(PATH)
-print("Enter run mode\n- Create java file (0)\n- Compile java file (1)\n- Run compiled class file (2)\n- Convert class file[s] to jar file (3)\n- Run jar file (4)")
-i = input(":")
+print("AVAILABLE TASKS:\n- Create Java file (0)\n- Compile Java file (1)\n- Run compiled Class file (2)\n- Convert Class file[s] to Jar file (3)\n- Run Jar file (4)")
+i = input("TASK TO EXECUTE: ")
 
 main = r"C:\Program Files\Java"
 version = ""
@@ -30,20 +30,20 @@ m_version = ""
 m_creator = ""
 classPaths = ""
 if i == '3':
-    print(f"NOTE: ALL CLASS FILES SHOULD BE IN THE SAME DIRECTORY ({PATH})")
-    jarName = input("Name of jar: ") + ".jar"
+    print(f"NOTE: ALL CLASS FILES SHOULD BE IN {PATH}")
+    jarName = input("Name of Jar: ") + ".jar"
     m_version = input("Manifest version: ")
     m_creator = input("Name of creator: ")
-    mainClass = input("Name of main class: ")
-    classPaths = input("Other classes (format: e1.class e2.class): ")
+    mainClass = input("Name of main Class file: ")
+    classPaths = input("Other class files (format: e1.class e2.class): ")
 elif i == '4':
-    name = input("\nEnter name of .jar file: ")
+    name = input("\nName of .jar file: ")
     path = os.path.join(PATH, name + ".jar")
 elif i == '2':
-    name = input("\nEnter name of .class file: ")
+    name = input("\nName of .class file: ")
     path = name
 elif i == '0' or i == '1':
-    name = input("\nEnter name of .java file: ")
+    name = input("\nName of .java file: ")
     path = os.path.join(PATH, name + ".java")
 
 if i == '0':
@@ -61,6 +61,7 @@ elif i == '3':
         file.write("\nCreated-By: " + m_creator)
         file.write("\nMain-Class: " + mainClass)
         file.write("\n\n")
+    print(f"Manifest created as {manifest}")
 
     mainClass += ".class"
     command = f'""{jar}" cfm "{jarName}" "{manifest}" "{mainClass}"'
