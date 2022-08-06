@@ -3,9 +3,9 @@ from rich.console import Console
 from rich.theme import Theme
 from rich.markup import escape
 from os import system, getcwd, scandir, chdir, mkdir, remove, rmdir, name
-from os.path import join, isdir, splitext, getsize, split, abspath
+from os.path import join, isfile, isdir, splitext, getsize, split, abspath
 
-system("title Python Command-line Editor V1.5.0")
+system("title Python Command-line Editor V1.5.1")
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -16,7 +16,7 @@ current = 0
 here = getcwd()
 PCESettings = ''.join((here, "\\PCESettings.txt"))
 
-if findf(PCESettings): current = int(readf(PCESettings, 'r'))
+if isfile(PCESettings): current = int(readf(PCESettings, 'r'))
 else: writef(PCESettings, ('0'))
 
 console = None
@@ -101,7 +101,7 @@ def main(cmd: str):
 
     def loadLines():
         global lines
-        if findf(path): lines = readf(path, 'r').split('\n')
+        if isfile(path): lines = readf(path, 'r').split('\n')
     
     def formatText(iinput):
         main = tuple(iinput.split())
@@ -132,7 +132,7 @@ def main(cmd: str):
         return total
 
     def checkPath(currentPath, dir=False):
-        if not dir and not findf(currentPath): console.print("[error]>>INVALID PATH: FILE DOES NOT EXIST[/]"); return 0
+        if not dir and not isfile(currentPath): console.print("[error]>>INVALID PATH: FILE DOES NOT EXIST[/]"); return 0
         elif dir and not isdir(currentPath): console.print("[error]>>INVALID PATH: DIRECTORY DOES NOT EXIST[/]"); return 0
         return 1
 
@@ -193,7 +193,7 @@ def main(cmd: str):
             console.print("[error]>>THE CURRENT WORKING DIRECTORY IS THE DIRECTORY YOU ARE TRYING TO DELETE.\n>>THIS CAN CAUSE ERRORS. CHANGE THE DIRECTORY TO THE PARENT FOLDER WITH: cd r[/]")
             return
 
-        if not findf(join(path2, permissionFile)):
+        if not isfile(join(path2, permissionFile)):
             console.print("[error]>>PCE IS ONLY ALLOWED TO DELETE DIRECTORIES MADE BY PCE[/]")
             return
     
@@ -230,7 +230,7 @@ def main(cmd: str):
 
                 size = ""
                 try:
-                    if findf(mainPath): size = getsize(mainPath)
+                    if isfile(mainPath): size = getsize(mainPath)
                     elif isdir(mainPath): size = dirSize(mainPath)
                 except: pass
 
@@ -267,7 +267,7 @@ def main(cmd: str):
 
             if checkPath(split(path)[0], True) == 0: path = ""; return
 
-            if not findf(path):
+            if not isfile(path):
                 option = console.input("[command]>>File was not found. Create? y/n [/]")
                 if option == "y":
                     writef(path, (""), 'x')
