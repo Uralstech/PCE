@@ -305,7 +305,7 @@ def mainf(cmd: str, entry:str=None):
 
             writef(join(path2, temp), tempInfo)
             console.print(f"[normal]>>Template created. To use it, open {temp} in {path2}  and type in the command \'run\'")
-        else: console.print("[error]INVALID COMMAND[/]")
+        else: console.print("[error]>>INVALID COMMAND[/]")
     elif path != "":
         if cmd.startswith(r"i "):
             formattedLine, index = formatText(cmd[2:])
@@ -434,8 +434,8 @@ def main():
         if isfile(argvPath): path = argvPath; loadLines()
         else: console.print("[error]>>UNKNOWN COMMAND OR FILE DOES NOTE EXIST[/]")
     
-    system("title Python Command-line Editor V1.5.2")
-    console.print(r"[normal]>>Type in 'help' to get started[/]")
+    system("title Python Command-line Editor v1.5.3")
+    console.print("[normal]>>Type in 'help' to get started[/]")
     chdir(environ["HOMEPATH"])
 
     output = 0
