@@ -98,6 +98,8 @@ def formatText(iinput):
 
 def checkMode(input: str):
     input = input.split()
+    input.append("")
+
     if len(input) == 0:console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
     elif input[0] == 'c': return join(getcwd(), input[1])
     elif input[0] == 'r': temp = "\\".join(getcwd().split('\\')[:-1]); return join(temp, input[1])
@@ -195,6 +197,7 @@ def mainf(cmd: str, entry:str=None):
         rmdir(path2)
         console.print("[normal]>>Directory deleted[/]")
     elif cmd.startswith(r"showdir"):
+        print(cmd[8:])
         path2 = checkMode(cmd[8:])
         if path2 == -1: return
 
@@ -434,7 +437,7 @@ def main():
         if isfile(argvPath): path = argvPath; loadLines()
         else: console.print("[error]>>UNKNOWN COMMAND OR FILE DOES NOTE EXIST[/]")
     
-    system("title Python Command-line Editor v1.5.3")
+    system("title Python Command-line Editor v1.5.4")
     console.print("[normal]>>Type in 'help' to get started[/]")
     chdir(environ["HOMEPATH"])
 
