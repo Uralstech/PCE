@@ -197,7 +197,6 @@ def mainf(cmd: str, entry:str=None):
         rmdir(path2)
         console.print("[normal]>>Directory deleted[/]")
     elif cmd.startswith(r"showdir"):
-        print(cmd[8:])
         path2 = checkMode(cmd[8:])
         if path2 == -1: return
 
@@ -437,7 +436,7 @@ def main():
         if isfile(argvPath): path = argvPath; loadLines()
         else: console.print("[error]>>UNKNOWN COMMAND OR FILE DOES NOTE EXIST[/]")
     
-    system("title Python Command-line Editor v1.5.4")
+    system("title Python Command-line Editor v1.5.5")
     console.print("[normal]>>Type in 'help' to get started[/]")
     chdir(environ["HOMEPATH"])
 
