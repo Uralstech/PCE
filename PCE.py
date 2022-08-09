@@ -2,10 +2,9 @@ from ShrtCde.IO import *
 from rich.console import Console
 from rich.theme import Theme
 from rich.markup import escape
-from os import system, getcwd, scandir, chdir, mkdir, remove, rmdir, name
+from os import system, getcwd, scandir, chdir, mkdir, remove, rmdir, name, environ
 from os.path import join, isfile, isdir, splitext, getsize, split, abspath
-
-system("title Python Command-line Editor V1.5.1")
+from sys import argv
 
 default = Theme({"normal" : "bold green", "error" : "bold underline red", "command" : "green", "file" : "yellow"})
 theme01 = Theme({"normal" : "bold blue", "error" : "bold underline magenta", "command" : "blue", "file" : "green"})
@@ -13,19 +12,8 @@ theme02 = Theme({"normal" : "bold yellow", "error" : "bold underline red", "comm
 theme03 = Theme({"normal" : "white", "error" : "white", "command" : "white", "file" : "white"})
 
 current = 0
-here = getcwd()
+here = '\\'.join(abspath(__file__).split('\\')[:-1])
 PCESettings = ''.join((here, "\\PCESettings.txt"))
-
-if isfile(PCESettings): current = int(readf(PCESettings, 'r'))
-else: writef(PCESettings, ('0'))
-
-console = None
-if current == 1: console = Console(theme=theme01)
-elif current == 2: console = Console(theme=theme02)
-elif current == 3: console = Console(theme=theme03)
-else: console = Console(theme=default)
-
-console.print(r"[normal]>>Type in 'help' to get started[/]")
 
 lines = {}
 copied = ()
@@ -93,48 +81,49 @@ r"""[normal]>>COMMANDS[/]
 [bold blue]>>  NOTE: TEXT FORMATTING IS AVAILABLE WITH $n (new-line) and $t (tab-space)
 [bold blue]>>  NOTE: COLORS AND FONTS WILL VARY ACROSS DIFFERENT COMMAND-LINE INTERPRETERS[/]""")
 
-def main(cmd: str):
+def loadLines():
+    global lines
+    if isfile(path): lines = readf(path, 'r').split('\n')
+
+def formatText(iinput):
+    main = tuple(iinput.split())
+    index = ""
+    line = ""
+    if len(main) > 1: index, line = main[0], ' '.join(main[1:])
+    else: index = main[0]
+
+    line = line.replace(r"$n", "\n")
+    line = line.replace(r"$t", "\t")
+    return line, index
+
+def checkMode(input: str):
+    input = input.split()
+    if len(input) == 0:console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
+    elif input[0] == 'c': return join(getcwd(), input[1])
+    elif input[0] == 'r': temp = "\\".join(getcwd().split('\\')[:-1]); return join(temp, input[1])
+    elif input[0] == 'f': return input[1]
+    else: console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
+    
+def dirSize(dirpath):
+    total = 0
+    try:
+        with scandir(dirpath) as scan:
+            for entry in scan:
+                if entry.is_file(): total += entry.stat().st_size
+                elif entry.is_dir(): total += dirSize(entry.path)
+    except: return "e"
+    return total
+
+def checkPath(currentPath, dir=False):
+    if not dir and not isfile(currentPath): console.print("[error]>>INVALID PATH: FILE DOES NOT EXIST[/]"); return 0
+    elif dir and not isdir(currentPath): console.print("[error]>>INVALID PATH: DIRECTORY DOES NOT EXIST[/]"); return 0
+    return 1
+
+def mainf(cmd: str, entry:str=None):
     global console
     global copied
     global lines
     global path
-
-    def loadLines():
-        global lines
-        if isfile(path): lines = readf(path, 'r').split('\n')
-    
-    def formatText(iinput):
-        main = tuple(iinput.split())
-        index = ""
-        line = ""
-        if len(main) > 1: index, line = main[0], ' '.join(main[1:])
-        else: index = main[0]
-
-        line = line.replace(r"$n", "\n")
-        line = line.replace(r"$t", "\t")
-        return line, index
-
-    def checkMode(input):
-        if len(input) == 0:console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
-        elif input[0] == 'c': return join(getcwd(), input[2:])
-        elif input[0] == 'r': temp = "\\".join(getcwd().split('\\')[:-1]); return join(temp, input[2:])
-        elif input[0] == 'f': return input[2:]
-        else: console.print("[error]>>INVALID COMMMAND SYNTAX[/]"); return -1
-    
-    def dirSize(dirpath):
-        total = 0
-        try:
-            with scandir(dirpath) as scan:
-                for entry in scan:
-                    if entry.is_file(): total += entry.stat().st_size
-                    elif entry.is_dir(): total += dirSize(entry.path)
-        except: return "e"
-        return total
-
-    def checkPath(currentPath, dir=False):
-        if not dir and not isfile(currentPath): console.print("[error]>>INVALID PATH: FILE DOES NOT EXIST[/]"); return 0
-        elif dir and not isdir(currentPath): console.print("[error]>>INVALID PATH: DIRECTORY DOES NOT EXIST[/]"); return 0
-        return 1
 
     if cmd.startswith(r"::"):
         console.print("[command]>>START OF [CUSTOM PYTHON CODE][/]")
@@ -427,10 +416,33 @@ def main(cmd: str):
         else: console.print("[error]>>INVALID COMMAND[/]")
     else: console.print("[error]>>INVALID COMMAND[/]")
 
-while True:
-    try:
+def main():
+    global path
+    global current
+    global console
+
+    if isfile(PCESettings): current = int(readf(PCESettings, 'r'))
+    else: writef(PCESettings, ('0'))
+
+    if current == 1: console = Console(theme=theme01)
+    elif current == 2: console = Console(theme=theme02)
+    elif current == 3: console = Console(theme=theme03)
+    else: console = Console(theme=default)
+    
+    if len(argv) > 1:
+        argvPath = argv[1]
+        if isfile(argvPath): path = argvPath; loadLines()
+        else: console.print("[error]>>UNKNOWN COMMAND OR FILE DOES NOTE EXIST[/]")
+    
+    system("title Python Command-line Editor V1.5.2")
+    console.print(r"[normal]>>Type in 'help' to get started[/]")
+    chdir(environ["HOMEPATH"])
+
+    output = 0
+    while output != 1:
         i = console.input("[command]>>[/]")
         if i != "":
-            output = main(i)
-            if output == 1: break
-    except: pass
+            output = mainf(i)
+
+if __name__ == '__main__':
+    main()
