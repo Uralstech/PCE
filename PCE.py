@@ -61,6 +61,8 @@ r"""[normal]>>COMMANDS[/]
 [normal]>>        Removes/replaces data at index (for removing data, don't add anything after index)[/]
 [command]>>      rb (from index) (to index)[/]
 [normal]>>        Removes all data from index one to index two[/]
+[command]>>      len[/]
+[normal]>>        Returns the total number of lines in the fill.[/]
 [command]>>      close[/]
 [normal]>>        Closes current file[/]
 [command]>>      show[/]
@@ -309,7 +311,8 @@ def mainf(cmd: str, entry:str=None):
             console.print(f"[normal]>>Template created. To use it, open {temp} in {path2}  and type in the command \'run\'")
         else: console.print("[error]>>INVALID COMMAND[/]")
     elif path != "":
-        if cmd.startswith(r"i "):
+        if cmd == r"len": console.print(f"[normal]>>{len(lines)}[/]")
+        elif cmd.startswith(r"i "):
             formattedLine, index = formatText(cmd[2:])
 
             try: index = int(index)
@@ -378,9 +381,7 @@ def mainf(cmd: str, entry:str=None):
                 return
 
             if _to >= len(lines) or _to < 0: lines.extend(copied)
-            else:
-                lines = [*lines[:_to], *copied, *lines[_to:]]
-                print(lines)
+            else: lines = [*lines[:_to], *copied, *lines[_to:]]
         elif cmd == r"close":
             lines = None
             path = ""
@@ -436,7 +437,7 @@ def main():
         if isfile(argvPath): path = argvPath; loadLines()
         else: console.print("[error]>>UNKNOWN COMMAND OR FILE DOES NOTE EXIST[/]")
     
-    system("title Python Command-line Editor v1.5.5")
+    system("title Python Command-line Editor v1.5.6")
     console.print("[normal]>>Type in 'help' to get started[/]")
     chdir(environ["HOMEPATH"])
 
